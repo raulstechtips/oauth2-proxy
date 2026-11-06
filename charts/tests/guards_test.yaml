@@ -1,0 +1,121 @@
+suite: Required connection and schema guards
+templates:
+  - templates/client-secret.yaml
+  - templates/config-secret.yaml
+  - templates/ingressroute.yaml
+tests:
+  - it: requires authRef.name for clientSecret
+    template: templates/client-secret.yaml
+    values:
+      - ../ci/all-on-values.yaml
+    set:
+      configSecret.enabled: false
+      infisical.authRef.name: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: infisical.authRef.name is required when clientSecret is enabled
+  - it: requires authRef.namespace for clientSecret
+    template: templates/client-secret.yaml
+    values:
+      - ../ci/all-on-values.yaml
+    set:
+      configSecret.enabled: false
+      infisical.authRef.namespace: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: infisical.authRef.namespace is required when clientSecret is enabled
+  - it: requires projectSlug for clientSecret
+    template: templates/client-secret.yaml
+    values:
+      - ../ci/all-on-values.yaml
+    set:
+      configSecret.enabled: false
+      infisical.projectSlug: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: infisical.projectSlug is required when clientSecret is enabled
+  - it: requires environmentSlug for clientSecret
+    template: templates/client-secret.yaml
+    values:
+      - ../ci/all-on-values.yaml
+    set:
+      configSecret.enabled: false
+      infisical.environmentSlug: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: infisical.environmentSlug is required when clientSecret is enabled
+  - it: requires authRef.name for configSecret
+    template: templates/config-secret.yaml
+    values:
+      - ../ci/all-on-values.yaml
+    set:
+      clientSecret.enabled: false
+      infisical.authRef.name: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: infisical.authRef.name is required when configSecret is enabled
+  - it: requires authRef.namespace for configSecret
+    template: templates/config-secret.yaml
+    values:
+      - ../ci/all-on-values.yaml
+    set:
+      clientSecret.enabled: false
+      infisical.authRef.namespace: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: infisical.authRef.namespace is required when configSecret is enabled
+  - it: requires projectSlug for configSecret
+    template: templates/config-secret.yaml
+    values:
+      - ../ci/all-on-values.yaml
+    set:
+      clientSecret.enabled: false
+      infisical.projectSlug: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: infisical.projectSlug is required when configSecret is enabled
+  - it: requires environmentSlug for configSecret
+    template: templates/config-secret.yaml
+    values:
+      - ../ci/all-on-values.yaml
+    set:
+      clientSecret.enabled: false
+      infisical.environmentSlug: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: infisical.environmentSlug is required when configSecret is enabled
+  - it: requires ingress host
+    template: templates/ingressroute.yaml
+    values:
+      - ../ci/all-on-values.yaml
+    set:
+      ingressRoute.host: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: ingressRoute.host is required when ingressRoute is enabled
+  - it: requires ingress tlsSecretName
+    template: templates/ingressroute.yaml
+    values:
+      - ../ci/all-on-values.yaml
+    set:
+      ingressRoute.tlsSecretName: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: ingressRoute.tlsSecretName is required when ingressRoute is enabled
+  - it: rejects unknown wrapper keys
+    template: templates/client-secret.yaml
+    set:
+      clientSecret.typo: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |
+            values don't meet the specifications of the schema(s) in the following chart(s):
+            oauth2-proxy:
+            - clientSecret: Additional property typo is not allowed
+  - it: permits upstream extensions
+    template: templates/client-secret.yaml
+    set:
+      oauth2-proxy.anyUpstreamKey: x
+    asserts:
+      - hasDocuments:
+          count: 0

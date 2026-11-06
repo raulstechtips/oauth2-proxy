@@ -1,0 +1,18 @@
+# Fake connection and host values for local and CI validation.
+infisical:
+  authRef:
+    name: fake-auth
+    namespace: default
+  projectSlug: fake-project
+  environmentSlug: fake-env
+clientSecret:
+  enabled: true
+configSecret:
+  enabled: true
+ingressRoute:
+  enabled: true
+  host: oauth2-proxy.example.test
+  tlsSecretName: fake-tls
+  middlewares:
+    - name: fake-headers
+      namespace: default

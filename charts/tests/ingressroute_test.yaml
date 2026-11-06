@@ -1,0 +1,37 @@
+suite: Traefik route wiring
+templates:
+  - templates/ingressroute.yaml
+release:
+  name: oauth2-proxy
+  namespace: oauth2-proxy
+tests:
+  - it: renders nothing by default
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: preserves route identity path rule middleware and service
+    values:
+      - ../ci/all-on-values.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: oauth2-proxy-ingress-prod
+      - equal:
+          path: spec.routes[0].match
+          value: "(Host(`oauth2-proxy.example.test`) && PathPrefix(`/oauth2/`)) || PathPrefix(`/oauth2/`)"
+      - equal:
+          path: spec.routes[0].services
+          value:
+            - name: oauth2-proxy
+              port: 80
+      - equal:
+          path: spec.routes[0].middlewares
+          value:
+            - name: fake-headers
+              namespace: default
+      - equal:
+          path: spec.tls.secretName
+          value: fake-tls
+      - equal:
+          path: metadata.annotations["kubernetes.io/ingress.class"]
+          value: traefik-external

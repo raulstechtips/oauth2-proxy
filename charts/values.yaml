@@ -1,0 +1,83 @@
+# Environment values live in cluster-config. No secret values here.
+infisical:
+  authRef:
+    name: ""
+    namespace: ""
+  projectSlug: ""
+  environmentSlug: ""
+
+clientSecret:
+  enabled: false
+  secretName: oauth2-proxy-client-secret
+  secretPath: /oauth2/config
+  recursive: true
+  refreshInterval: 60s
+  keys:
+    client-id: OAUTH2_PROXY_CLIENT_ID
+    client-secret: OAUTH2_PROXY_CLIENT_SECRET
+    cookie-secret: OAUTH2_PROXY_COOKIE_SECRET
+
+configSecret:
+  enabled: false
+  secretName: oauth2-proxy-config-secret
+  secretPath: /oauth2/config
+  recursive: true
+  refreshInterval: 60s
+  keys:
+    OAUTH2_PROXY_ALLOWED_GROUPS: OAUTH2_PROXY_ALLOWED_GROUPS
+    OAUTH2_PROXY_COOKIE_DOMAINS: OAUTH2_PROXY_COOKIE_DOMAINS
+    OAUTH2_PROXY_EMAIL_DOMAINS: OAUTH2_PROXY_EMAIL_DOMAINS
+    OAUTH2_PROXY_OIDC_ISSUER_URL: OAUTH2_PROXY_OIDC_ISSUER_URL
+    OAUTH2_PROXY_PROVIDER: OAUTH2_PROXY_PROVIDER
+    OAUTH2_PROXY_REDIRECT_URL: OAUTH2_PROXY_REDIRECT_URL
+    OAUTH2_PROXY_SCOPE: OAUTH2_PROXY_SCOPE
+    OAUTH2_PROXY_WHITELIST_DOMAINS: OAUTH2_PROXY_WHITELIST_DOMAINS
+
+ingressRoute:
+  enabled: false
+  entryPoints: [websecure]
+  ingressClass: traefik-external
+  middlewares: []
+  host: ""
+  tlsSecretName: ""
+
+# Only differences from upstream 8.5.0 defaults. Its default image is already v7.13.0.
+oauth2-proxy:
+  config:
+    # Infisical supplies credentials; the dependency must not render a Secret.
+    existingSecret: oauth2-proxy-client-secret
+    configFile: |-
+      upstreams = ["static://200"]
+  # Preserve the live authentication and cookie settings.
+  extraArgs:
+    reverse-proxy: "true"
+    skip-provider-button: "true"
+    silence-ping-logging: "true"
+    pass-authorization-header: "true"
+    cookie-csrf-per-request: "true"
+    code-challenge-method: "S256"
+    cookie-refresh: "2m"
+    cookie-expire: "24h"
+  envFrom:
+    - secretRef:
+        name: oauth2-proxy-config-secret
+  resources:
+    limits:
+      cpu: 200m
+      memory: 512Mi
+    requests:
+      cpu: 20m
+      memory: 256Mi
+  # Keep the existing scheduling preference during adoption.
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app
+                  operator: In
+                  values: [oauth2-proxy]
+            topologyKey: kubernetes.io/hostname
+  replicaCount: 3

@@ -1,0 +1,11 @@
+project-config:
+  project-name: oauth2-proxy
+  project-description: "Helm chart that installs OAuth2 Proxy in the cluster"
+  project-namespace: oauth2-proxy
+  publish-targets: [ghcr]
+  pipeline-steps:
+    helm-test: true
+    trivy-scan: true
+    opengrep-scan: true
+    helm-package-upload: true
+    argo-deploy: true
